@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل مدیریت آکواورد</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .pending-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
+        .pending-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(12px); border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .btn-verify { background: #48bb78; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .btn-reject { background: #fc8181; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: #fefcbf; color: #975a16; }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <header style="display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.2);">
+            <h1 style="color:#fff;">👑 پنل مدیریت</h1>
+            <div>
+                <span id="admin-name" style="margin-left:15px; font-weight:bold; color:#fff;"></span>
+                <button onclick="logout()" style="padding:8px 20px; background:#e53e3e; color:white; border:none; border-radius:8px; cursor:pointer;">خروج</button>
+            </div>
+        </header>
+        <div style="margin: 30px 0;">
+            <h2 style="color:#fff;">📋 VWUهای در انتظار تایید</h2>
+            <div id="pending-list" class="pending-list"><p style="color:rgba(255,255,255,0.7);">در حال بارگذاری...</p></div>
+        </div>
+    </div>
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+        let authToken = localStorage.getItem('aquaverde_token');
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': authToken ? `Bearer ${authToken}` : ''
+            };
+        }
+        async function loadPendingVWUs() {
+            try {
+                const response = await fetch(`${API_URL}/admin/pending-vwus`, { headers: getHeaders() });
+                const data = await response.json();
+                const container = document.getElementById('pending-list');
+                if (response.status === 403) {
+                    container.innerHTML = '<p style="color:#fc8181;">❌ شما دسترسی ادمین ندارید.</p>';
+                    return;
+                }
+                if (data.length === 0) {
+                    container.innerHTML = '<p style="color:#48bb78;">✅ همه VWUها تایید شده‌اند.</p>';
+                    return;
+                }
+                container.innerHTML = data.map(vwu => `
+                    <div class="pending-card">
+                        <div style="display:flex; justify-content:space-between;">
+                            <h3>${vwu.batch_number}</h3>
+                            <span class="badge">در انتظار</span>
+                        </div>
+                        <p><strong>مزرعه:</strong> ${vwu.farm_name}</p>
+                        <p><strong>کشاورز:</strong> ${vwu.farmer_phone}</p>
+                        <p><strong>صرفه‌جویی:</strong> ${vwu.water_saved.toLocaleString()} مترمکعب</p>
+                        <p><strong>قیمت کل:</strong> ${vwu.total_price.toLocaleString()} تومان</p>
+                        <div style="margin-top:15px;">
+                            <button class="btn-verify" onclick="verifyVWU(${vwu.id})">✅ تایید</button>
+                            <button class="btn-reject" onclick="rejectVWU(${vwu.id})">❌ رد</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('pending-list').innerHTML = '<p style="color:#fc8181;">❌ خطا در ارتباط با سرور</p>';
+                console.error(error);
+            }
+        }
+        async function verifyVWU(vwuId) {
+            if (!confirm('تایید شود؟')) return;
+            const response = await fetch(`${API_URL}/admin/verify-vwu/${vwuId}`, { method: 'POST', headers: getHeaders() });
+            const data = await response.json();
+            alert(data.message || '✅ انجام شد');
+            loadPendingVWUs();
+        }
+        async function rejectVWU(vwuId) {
+            if (!confirm('رد شود؟')) return;
+            const response = await fetch(`${API_URL}/admin/reject-vwu/${vwuId}`, { method: 'POST', headers: getHeaders() });
+            const data = await response.json();
+            alert(data.message || '❌ انجام شد');
+            loadPendingVWUs();
+        }
+        function logout() {
+            localStorage.removeItem('aquaverde_token');
+            window.location.href = 'index.html';
+        }
+        if (!authToken) window.location.href = 'index.html';
+        else loadPendingVWUs();
+    </script>
+</body>
+</html>

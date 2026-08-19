@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>آکواورد - بازار آب مجازی</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo">💧 آکواورد</div>
+            <div id="auth-buttons">
+                <button onclick="showLogin()">ورود</button>
+                <button onclick="showRegister()">ثبت‌نام</button>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="user-name"></span>
+                <button onclick="logout()">خروج</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="login-form" class="form-container" style="display:none;">
+                <h2>🔐 ورود</h2>
+                <input type="text" id="login-phone" placeholder="شماره موبایل">
+                <input type="password" id="login-password" placeholder="رمز عبور">
+                <button onclick="login()">ورود</button>
+                <p><a href="#" onclick="showRegister()">ثبت‌نام نکرده‌اید؟</a></p>
+            </div>
+
+            <div id="register-form" class="form-container" style="display:none;">
+                <h2>📝 ثبت‌نام</h2>
+                <input type="text" id="reg-name" placeholder="نام و نام خانوادگی">
+                <input type="text" id="reg-phone" placeholder="شماره موبایل">
+                <input type="password" id="reg-password" placeholder="رمز عبور">
+                <select id="reg-type">
+                    <option value="farmer">👨‍🌾 کشاورز</option>
+                    <option value="industry">🏭 صنعت</option>
+                    <option value="admin">👑 ادمین</option>
+                </select>
+                <button onclick="register()">ثبت‌نام</button>
+                <p><a href="#" onclick="showLogin()">قبلاً ثبت‌نام کرده‌اید؟</a></p>
+            </div>
+
+            <div id="dashboard" style="display:none;">
+                <div class="stats-grid">
+                    <div class="stat-card"><h3>💰 موجودی</h3><p id="user-balance">۰ تومان</p></div>
+                    <div class="stat-card"><h3>🌾 مزارع</h3><p id="farms-count">۰</p></div>
+                    <div class="stat-card"><h3>📊 VWU ثبت‌شده</h3><p id="vwu-count">۰</p></div>
+                </div>
+
+                <div id="market-section">
+                    <h2>🛒 بازار آب مجازی</h2>
+                    <div id="market-vwus" class="vwu-grid"><p style="color:#718096;">در حال بارگذاری...</p></div>
+                </div>
+
+                <div class="form-container">
+                    <h3>🌱 ثبت مزرعه جدید</h3>
+                    <input type="text" id="farm-name" placeholder="نام مزرعه">
+                    <input type="number" id="farm-area" placeholder="مساحت (هکتار)">
+                    <input type="text" id="farm-crop" placeholder="نوع محصول (مثلاً گندم)">
+                    <input type="text" id="farm-region" placeholder="منطقه (مثلاً اصفهان)">
+                    <button onclick="createFarm()">ثبت مزرعه</button>
+                </div>
+
+                <div class="form-container" style="margin-top:30px; border-top:2px solid rgba(255,255,255,0.2); padding-top:25px;">
+                    <h3>📊 ثبت صرفه‌جویی جدید (VWU)</h3>
+                    <div style="margin-bottom:10px; color:rgba(255,255,255,0.7); font-size:14px;">💡 برای هر مترمکعب آبی که در مزرعه خود صرفه‌جویی کرده‌اید، یک VWU ثبت کنید.</div>
+                    <select id="vwu-farm-select"><option value="">انتخاب مزرعه...</option></select>
+                    <input type="number" id="vwu-water-saved" placeholder="میزان صرفه‌جویی (مترمکعب)">
+                    <input type="number" id="vwu-price" placeholder="قیمت پیشنهادی هر واحد (تومان)" value="500">
+                    <button onclick="createVWU()">🚀 ثبت VWU جدید</button>
+                    <div id="vwu-message"></div>
+                </div>
+
+                <div id="esg-section" style="display:none;">
+                    <h3>🌱 گزارش سبز شما</h3>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:15px; margin:20px 0;">
+                        <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:28px; font-weight:bold; color:#fff;" id="total-bought">۰</div>
+                            <div style="color:rgba(255,255,255,0.7); font-size:14px;">کل VWU خریداری‌شده</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:28px; font-weight:bold; color:#fff;" id="co2-saved">۰</div>
+                            <div style="color:rgba(255,255,255,0.7); font-size:14px;">کاهش CO₂ (کیلوگرم)</div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.08); padding:15px; border-radius:8px; text-align:center;">
+                            <div style="font-size:28px; font-weight:bold; color:#fff;" id="trees-saved">۰</div>
+                            <div style="color:rgba(255,255,255,0.7); font-size:14px;">معادل درخت کاشته‌شده</div>
+                        </div>
+                    </div>
+                    <button onclick="generateReport()" style="padding:10px 30px; background:rgba(43,108,176,0.7); color:#fff; border:1px solid rgba(255,255,255,0.15); border-radius:8px; cursor:pointer; font-weight:bold;">📄 دریافت گزارش کامل (PDF)</button>
+                    <div id="report-message" style="margin-top:10px; font-size:14px; color:#fff;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        if ('Notification' in window) Notification.requestPermission();
+    </script>
+    <script src="app.js"></script>
+</body>
+</html>
